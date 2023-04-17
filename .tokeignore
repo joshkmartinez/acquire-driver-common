@@ -1,0 +1,6 @@
+build
+ignore
+**/3rdParty
+**/gl
+**/imgui
+**/KHR
