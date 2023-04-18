@@ -89,7 +89,7 @@ basic_device_describe(const struct Driver* driver,
         XXX(Storage,Raw,"raw"),
         XXX(Storage,Tiff,"tiff"),
         XXX(Storage,Trash,"Trash"),
-        XXX(Storage,SideBySideTiffJson,"tiff+json"),
+        XXX(Storage,SideBySideTiffJson,"tiff-json"),
     };
     // clang-format on
 #undef XXX
