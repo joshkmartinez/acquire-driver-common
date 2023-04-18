@@ -436,7 +436,9 @@ Tiff::set(const struct StorageProperties* settings) noexcept
         filename_ = filename;
 
         // Validate and copy external metadata
-        if (settings->external_metadata_json.str) {
+        // If the string isn't null, or "" then it needs to be at least "{}"
+        if (settings->external_metadata_json.str &&
+            settings->external_metadata_json.nbytes > 1) {
             CHECK(validate_json(settings->external_metadata_json.str,
                                 settings->external_metadata_json.nbytes));
             external_metadata_ = string(settings->external_metadata_json.str);
@@ -466,7 +468,7 @@ Tiff::start() noexcept
         write_(0, (void*)&hdr, sizeof(hdr));
         last_offset_ = sizeof(hdr);
     }
-    LOG("TIFF: Streaming to %s", filename_.c_str());
+    LOG("TIFF: Streaming to \"%s\"", filename_.c_str());
     return 1;
 Error:
     return 0;
