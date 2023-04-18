@@ -1,15 +1,18 @@
 if (${NOTEST})
     message(STATUS "Skipping test targets")
 else ()
+
     #
     # PARAMETERS
     #
+
     set(project acquire-driver-common) # CMAKE_PROJECT_NAME gets overridden if this is a subtree of another project
     set(driver acquire-driver-common)
 
     #
     # Copy driver to tests
     #
+
     add_custom_target(${project}-copy-for-tests
             COMMAND ${CMAKE_COMMAND} -E copy
             $<TARGET_FILE:${driver}>
@@ -21,9 +24,11 @@ else ()
     #
     # Tests
     #
+
     foreach (name
-            unit-tests
             can-load-driver-interface
+            list-devices
+            unit-tests
             )
         set(tgt ${project}-${name})
         add_executable(${tgt} ${name}.cpp)
@@ -35,6 +40,7 @@ else ()
         target_link_libraries(${tgt}
                 acquire-core-platform
                 acquire-core-logger
+                acquire-device-kit
                 )
         add_dependencies(${tgt} ${project}-copy-for-tests)
 
