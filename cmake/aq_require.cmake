@@ -1,5 +1,5 @@
-function(aq_require path tgt)
+function(aq_require tgt)
     if(NOT TARGET ${tgt})
-        add_subdirectory(${path})
+        add_subdirectory(${tgt})
     endif()
 endfunction()

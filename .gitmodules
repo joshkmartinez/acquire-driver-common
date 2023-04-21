@@ -1,4 +1,4 @@
 [submodule "src/acquire-device-kit"]
-	path = src/kit
+	path = src/acquire-device-kit
 	url = ../acquire-device-kit.git
 	branch = main
