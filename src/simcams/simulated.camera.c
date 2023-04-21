@@ -268,11 +268,11 @@ simcam_get_meta(const struct Camera* camera,
       containerof(camera, const struct SimulatedCamera, camera);
     const unsigned binning = self->properties.binning;
     // current shape
-    const float cw = self->properties.shape.x;
-    const float ch = self->properties.shape.y;
+    const float cw = (float)self->properties.shape.x;
+    const float ch = (float)self->properties.shape.y;
     // max shape
-    const float w = MAX_IMAGE_WIDTH / binning;
-    const float h = MAX_IMAGE_HEIGHT / binning;
+    const float w = (float)MAX_IMAGE_WIDTH / (float)binning;
+    const float h = (float)MAX_IMAGE_HEIGHT / (float)binning;
     // max offset - min width and height are 1 px.
     const float ox = max(0, w - cw - 1);
     const float oy = max(0, h - ch - 1);
