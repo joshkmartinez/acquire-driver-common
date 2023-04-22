@@ -11,24 +11,15 @@ else()
     set(driver acquire-driver-common)
 
     #
-    # Copy driver to tests
-    #
-    add_custom_target(${project}-copy-for-tests
-        COMMAND ${CMAKE_COMMAND} -E copy
-        $<TARGET_FILE:${driver}>
-        ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS ${driver}
-        COMMENT "Copying ${driver} to ${CMAKE_CURRENT_BINARY_DIR}"
-    )
-
-    #
     # Tests
     #
-    foreach(name
+    set(tests
         can-load-driver-interface
         list-devices
         unit-tests
     )
+
+    foreach(name ${tests})
         set(tgt ${project}-${name})
         add_executable(${tgt} ${name}.cpp)
         target_compile_definitions(${tgt} PUBLIC "TEST=\"${tgt}\"")
@@ -41,9 +32,23 @@ else()
             acquire-core-logger
             acquire-device-kit
         )
-        add_dependencies(${tgt} ${project}-copy-for-tests)
-
         add_test(NAME test-${tgt} COMMAND ${tgt})
         set_tests_properties(test-${tgt} PROPERTIES LABELS anyplatform)
+    endforeach()
+
+    #
+    # Copy driver to tests
+    #
+    list(POP_FRONT tests onename)
+    add_custom_target(${project}-copy-${driver}-for-tests
+        COMMAND ${CMAKE_COMMAND} -E copy
+        $<TARGET_FILE:${driver}>
+        $<TARGET_FILE_DIR:${project}-${onename}>
+        DEPENDS ${driver}
+        COMMENT "Copying ${driver} to $<TARGET_FILE_DIR:${project}-${onename}>"
+    )
+
+    foreach(name ${tests})
+        add_dependencies(${tgt} ${project}-copy-${driver}-for-tests)
     endforeach()
 endif()
