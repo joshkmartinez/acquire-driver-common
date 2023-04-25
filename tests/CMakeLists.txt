@@ -11,7 +11,7 @@ else()
     #
     # Tests
     #
-    set(test
+    set(tests
         can-load-driver-interface
         list-devices
         unit-tests
