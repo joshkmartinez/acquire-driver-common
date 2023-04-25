@@ -1,12 +1,4 @@
-[submodule "src/acquire-device-kit"]
-	path = src/acquire-device-kit
-	url = ../acquire-device-kit.git
-	branch = main
-[submodule "tests/acquire-core-platform"]
-	path = tests/acquire-core-platform
-	url = ../acquire-core-platform.git
-	branch = main
-[submodule "tests/acquire-core-logger"]
-	path = tests/acquire-core-logger
-	url = ../acquire-core-logger.git
-	branch = main
+[submodule "src/acquire-core-libs"]
+	path = src/acquire-core-libs
+	url = ../acquire-core-libs.git
+    branch = main

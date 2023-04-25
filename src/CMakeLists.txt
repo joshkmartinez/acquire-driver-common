@@ -1,4 +1,6 @@
-aq_require(acquire-device-kit)
+if(NOT TARGET acquire-device-kit)
+    add_subdirectory(acquire-core-libs)
+endif()
 
 add_subdirectory(simcams)
 add_subdirectory(storage)

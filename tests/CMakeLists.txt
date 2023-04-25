@@ -1,8 +1,6 @@
 if(${NOTEST})
     message(STATUS "Skipping test targets")
 else()
-    aq_require(acquire-core-logger)
-    aq_require(acquire-core-platform)
 
     #
     # PARAMETERS
@@ -13,7 +11,7 @@ else()
     #
     # Tests
     #
-    set(tests
+    set(test
         can-load-driver-interface
         list-devices
         unit-tests
