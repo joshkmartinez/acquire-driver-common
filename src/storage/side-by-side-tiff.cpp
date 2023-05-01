@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <vcruntime.h>
 
 namespace fs = std::filesystem;
 
@@ -67,7 +68,7 @@ validate_write_permissions(const fs::path& path)
 }
 
 void
-validate_json(const char* str, char nbytes)
+validate_json(const char* str, size_t nbytes)
 {
     if (!str || !nbytes)
         return;
