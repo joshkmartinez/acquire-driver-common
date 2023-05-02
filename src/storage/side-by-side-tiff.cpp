@@ -19,7 +19,6 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
-#include <vcruntime.h>
 
 namespace fs = std::filesystem;
 
