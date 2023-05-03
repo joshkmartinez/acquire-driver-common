@@ -196,13 +196,13 @@ image_description(StringSection& strings, const char* fmt, ...)
 tag_t
 image_width(uint64_t w)
 {
-    return tag_t::as_u32(256, w);
+    return tag_t::as_u32(256, (uint32_t)w);
 }
 
 tag_t
 image_length(uint64_t h)
 {
-    return tag_t::as_u32(257, h);
+    return tag_t::as_u32(257, (uint32_t)h);
 }
 
 tag_t
@@ -232,7 +232,7 @@ resolution_unit_centimeter()
 tag_t
 rows_per_strip(uint64_t v)
 {
-    return tag_t::as_u32(278, v);
+    return tag_t::as_u32(278, (uint32_t)v);
 }
 
 tag_t
@@ -532,14 +532,17 @@ Tiff::append(const struct VideoFrame* frames, size_t nbytes) noexcept
                   // required fields for grayscale images
                   image_width(cur->shape.dims.width),
                   image_length(cur->shape.dims.height),
-                  bits_per_sample(8 * bytes_of_type(cur->shape.type)),
+                  bits_per_sample(
+                    (uint16_t)(8 * bytes_of_type(cur->shape.type))),
                   uncompressed(),
                   photometric_interpretation_black_is_zero(),
                   strip_offsets(section_data),
                   rows_per_strip(cur->shape.dims.height),
                   strip_byte_counts(bytes_of_image),
-                  x_resolution(10000 * 10000, pixel_scale_um_.x * 10000),
-                  y_resolution(10000 * 10000, pixel_scale_um_.y * 10000),
+                  x_resolution(10000 * 10000,
+                               10000 * (uint32_t)pixel_scale_um_.x),
+                  y_resolution(10000 * 10000,
+                               10000 * (uint32_t)pixel_scale_um_.y),
                   resolution_unit_centimeter(),
                   orientation_top_left(),
                   sample_format(cur->shape.type),
