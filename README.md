@@ -1,5 +1,8 @@
 # Acquire Common Driver
 
+[![Build](https://github.com/acquire-project/acquire-driver-common/actions/workflows/build.yml/badge.svg)](https://github.com/acquire-project/acquire-driver-common/actions/workflows/build.yml)
+[![Tests](https://github.com/acquire-project/acquire-driver-common/actions/workflows/test_pr.yml/badge.svg)](https://github.com/acquire-project/acquire-driver-common/actions/workflows/test_pr.yml)
+
 This is an Acquire Driver that exposes commonly used devices.
 
 ## Devices
