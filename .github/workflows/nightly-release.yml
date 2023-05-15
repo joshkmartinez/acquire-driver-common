@@ -31,7 +31,7 @@ jobs:
 
       - name: Build
         run: |
-          cmake --build ${{github.workspace}}/build --config Release
+          cmake --build ${{github.workspace}}/build --config Release -DCPACK_PACKAGE_VERSION="nightly"
           cpack --config ${{github.workspace}}/build/CPackConfig.cmake -C Release -G ZIP
 
       - uses: actions/upload-artifact@v3
