@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3](https://github.com/acquire-project/acquire-core-libs/compare/v0.1.2...v0.1.3) - 2023-06-27
+
+### Changed
+
+- Reflect a change in core-libs: `StorageProperties::chunking::max_bytes_per_chunk` is now a `uint64_t` (was
+  a `uint32_t`).
+
+### Added
+
+- Can optionally link against the DLL version of the MSVC runtime. 
+
 ## [0.1.2](https://github.com/acquire-project/acquire-driver-common/compare/v0.1.1...v0.1.2) - 2023-05-25
 
 ### Added
