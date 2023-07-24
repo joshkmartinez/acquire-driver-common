@@ -22,7 +22,7 @@
 
 #define MAX_IMAGE_WIDTH (1ULL << 13)
 #define MAX_IMAGE_HEIGHT (1ULL << 13)
-#define MAX_BYTES_PER_PIXEL (2)
+#define MAX_BYTES_PER_PIXEL (4)
 
 #define containerof(ptr, T, V) ((T*)(((char*)(ptr)) - offsetof(T, V)))
 #define countof(e) (sizeof(e) / sizeof(*(e)))
@@ -52,9 +52,6 @@
 
 uint8_t
 popcount_u8(uint8_t value);
-
-static float
-get_animation_time_sec();
 
 struct SimulatedCamera
 {
@@ -120,17 +117,58 @@ im_fill_rand(const struct ImageShape* const shape, uint8_t* buf)
         *(uint32_t*)p = pcg32_random();
 }
 
-/// This is used for animating the parameter in im_fill_pattern.
-/// This timebase gets shared between all "pattern" cameras and as a result they
-/// are synchronized.
-///
-/// Thread safety: Don't really need to worry about since we don't care who
-/// wins during initialization. Afterwards it's effectively read only.
-static struct
+void
+im_fill_pattern_u8(const struct ImageShape* const shape,
+                   float ox,
+                   float oy,
+                   uint8_t* buf);
+void
+im_fill_pattern_i8(const struct ImageShape* const shape,
+                   float ox,
+                   float oy,
+                   int8_t* buf);
+
+void
+im_fill_pattern_u16(const struct ImageShape* const shape,
+                    float ox,
+                    float oy,
+                    uint16_t* buf);
+
+void
+im_fill_pattern_i16(const struct ImageShape* const shape,
+                    float ox,
+                    float oy,
+                    int16_t* buf);
+
+void
+im_fill_pattern_f32(const struct ImageShape* const shape,
+                    float ox,
+                    float oy,
+                    float* buf);
+
+static const char*
+sample_type_to_string(enum SampleType type)
 {
-    struct clock clk;
-    int is_initialized;
-} g_animation_clk = { 0 };
+#define XXX(t) [SampleType_##t] = #t
+    // clang-format off
+    static const char* const table[] = {
+        XXX(u8),
+        XXX(u16),
+        XXX(i8),
+        XXX(i16),
+        XXX(f32),
+        XXX(u10),
+        XXX(u12),
+        XXX(u14),
+    };
+    // clang-format on
+#undef XXX
+
+    if (type >= countof(table))
+        return "(unknown)";
+
+    return table[type];
+}
 
 static void
 im_fill_pattern(const struct ImageShape* const shape,
@@ -138,38 +176,26 @@ im_fill_pattern(const struct ImageShape* const shape,
                 float oy,
                 uint8_t* buf)
 {
-    float t = get_animation_time_sec();
-
-    const float cx = ox + 0.5f * (float)shape->dims.width;
-    const float cy = oy + 0.5f * (float)shape->dims.height;
-    for (uint32_t y = 0; y < shape->dims.height; ++y) {
-        const float dy = y - cy;
-        const float dy2 = dy * dy;
-        for (uint32_t x = 0; x < shape->dims.width; ++x) {
-            const size_t o = (size_t)shape->strides.width * x +
-                             (size_t)shape->strides.height * y;
-            const float dx = x - cx;
-            const float dx2 = dx * dx;
-            buf[o] =
-              (uint8_t)(127.0f *
-                        (sinf(6.28f * (t * 10.0f + (dx2 + dy2) * 1e-2f)) +
-                         1.0f));
-        }
+    switch (shape->type) {
+        case SampleType_u8:
+            im_fill_pattern_u8(shape, ox, oy, buf);
+            break;
+        case SampleType_i8:
+            im_fill_pattern_i8(shape, ox, oy, (int8_t*)buf);
+            break;
+        case SampleType_u16:
+            im_fill_pattern_u16(shape, ox, oy, (uint16_t*)buf);
+            break;
+        case SampleType_i16:
+            im_fill_pattern_i16(shape, ox, oy, (int16_t*)buf);
+            break;
+        case SampleType_f32:
+            im_fill_pattern_f32(shape, ox, oy, (float*)buf);
+            break;
+        default:
+            LOGE("Unsupported pixel type for this simcam: %s",
+                 sample_type_to_string(shape->type));
     }
-}
-static float
-get_animation_time_sec()
-{
-    float t;
-    {
-        struct clock* const clk = &g_animation_clk.clk;
-        if (!g_animation_clk.is_initialized) {
-            clock_init(clk);
-            g_animation_clk.is_initialized = 1;
-        }
-        t = (float)clock_toc_ms(clk) * 1e-3f;
-    }
-    return t;
 }
 
 static void
@@ -290,7 +316,11 @@ simcam_get_meta(const struct Camera* camera,
             .x = { .high = ox, .writable = 1, },
             .y = { .high = oy, .writable = 1, },
         },
-        .supported_pixel_types = (1ULL << SampleType_u8),
+        .supported_pixel_types = (1ULL << SampleType_u8)  |
+                                 (1ULL << SampleType_u16) |
+                                 (1ULL << SampleType_i8)  |
+                                 (1ULL << SampleType_i16) |
+                                 (1ULL << SampleType_f32),
         .digital_lines = {
           .line_count=1,
           .names = { [0] = "Software" },
@@ -325,7 +355,7 @@ simcam_set(struct Camera* camera, struct CameraProperties* settings)
     }
 
     self->properties = *settings;
-    self->properties.pixel_type = SampleType_u8;
+    self->properties.pixel_type = settings->pixel_type;
     self->properties.input_triggers = (struct camera_properties_input_triggers_s){
         .frame_start = { .enable = settings->input_triggers.frame_start.enable,
                          .line = 0, // Software
@@ -346,12 +376,17 @@ simcam_set(struct Camera* camera, struct CameraProperties* settings)
                         (uint32_t)meta.shape.y.high),
         .planes = 1,
     };
+    shape->type = settings->pixel_type;
     compute_strides(shape);
 
     self->properties.shape = (struct camera_properties_shape_s){
         .x = shape->dims.width,
         .y = shape->dims.height,
     };
+
+    size_t nbytes = aligned_bytes_of_image(shape);
+    self->im.data = malloc(nbytes);
+    EXPECT(self->im.data, "Allocation of %llu bytes failed.", nbytes);
 
     return Device_Ok;
 Error:
@@ -506,7 +541,7 @@ simcam_make_camera(enum BasicDeviceKind kind)
               .height=properties.shape.x,
               .planes=properties.shape.x*properties.shape.y,
             },
-            .type=SampleType_u8
+            .type=properties.pixel_type
           },
         },
         .camera={
@@ -525,8 +560,6 @@ simcam_make_camera(enum BasicDeviceKind kind)
     lock_init(&self->im.lock);
     condition_variable_init(&self->im.frame_ready);
     event_init(&self->software_trigger.event);
-    CHECK(self->im.data =
-            malloc(MAX_IMAGE_WIDTH * MAX_IMAGE_HEIGHT * MAX_BYTES_PER_PIXEL));
 
     return &self->camera;
 Error:
