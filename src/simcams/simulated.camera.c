@@ -283,8 +283,13 @@ simulated_camera_streamer_thread(struct SimulatedCamera* self)
         ECHO(lock_release(&self->im.lock));
 
         if (self->streamer.is_running)
-            clock_sleep_ms(&self->streamer.throttle,
-                           self->properties.exposure_time_us * 1e-3f);
+            // For some reason the thread won't yield if we sleep we a long
+            // nanosleep, but will if we do many short nanosleeps
+            for (int i = 0; i < 100; ++i) { // Loop to help the thread yield
+                clock_sleep_ms(&self->streamer.throttle,
+                               self->properties.exposure_time_us * 1e-3f *
+                                 1e-2f);
+            }
     }
 }
 
